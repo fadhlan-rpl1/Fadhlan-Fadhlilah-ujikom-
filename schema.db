@@ -1,10 +1,97 @@
-CREATE TABLE IF NOT EXISTS "migrations" ("id" integer primary key autoincrement not null, "migration" varchar not null, "batch" integer not null);
-CREATE TABLE sqlite_sequence(name,seq);
-CREATE TABLE IF NOT EXISTS "users" ("id" integer primary key autoincrement not null, "nama_lengkap" varchar not null, "username" varchar not null, "password" varchar not null, "role" varchar check ("role" in ('admin', 'petugas', 'owner')) not null, "created_at" datetime, "updated_at" datetime);
-CREATE UNIQUE INDEX "users_username_unique" on "users" ("username");
-CREATE TABLE IF NOT EXISTS "tb_tarif" ("id" integer primary key autoincrement not null, "jenis_kendaraan" varchar not null, "tarif_per_jam" integer not null, "created_at" datetime, "updated_at" datetime);
-CREATE TABLE IF NOT EXISTS "tb_area_parkir" ("id" integer primary key autoincrement not null, "nama_area" varchar not null, "kapasitas" integer not null, "terisi" integer not null default '0', "created_at" datetime, "updated_at" datetime);
-CREATE TABLE IF NOT EXISTS "tb_kendaraan" ("id" integer primary key autoincrement not null, "plat_nomor" varchar not null, "jenis_kendaraan" varchar not null, "user_id" integer, "created_at" datetime, "updated_at" datetime, foreign key("user_id") references "users"("id") on delete set null);
-CREATE UNIQUE INDEX "tb_kendaraan_plat_nomor_unique" on "tb_kendaraan" ("plat_nomor");
-CREATE TABLE IF NOT EXISTS "tb_transaksi" ("id" integer primary key autoincrement not null, "plat_nomor" varchar not null, "waktu_masuk" datetime not null, "waktu_keluar" datetime, "biaya_total" integer not null default '0', "status" varchar check ("status" in ('masuk', 'keluar')) not null default 'masuk', "durasi_jam" integer not null default '0', "tarif_id" integer, "user_id" integer, "area_parkir_id" integer, "created_at" datetime, "updated_at" datetime, foreign key("tarif_id") references "tb_tarif"("id") on delete set null, foreign key("user_id") references "users"("id") on delete set null, foreign key("area_parkir_id") references "tb_area_parkir"("id") on delete set null);
-CREATE TABLE IF NOT EXISTS "activity_logs" ("id" integer primary key autoincrement not null, "user_id" integer not null, "aktivitas" varchar not null, "created_at" datetime, "updated_at" datetime, foreign key("user_id") references "users"("id") on delete cascade);
+-- ========================================================
+-- NAMA DATABASE: lannpark
+-- DBMS         : MySQL
+-- DESKRIPSI    : Struktur Database Sistem Manajemen Parkir
+-- ========================================================
+
+-- Membuat Database (Jika belum ada)
+CREATE DATABASE IF NOT EXISTS `lannpark`;
+USE `lannpark`;
+
+-- ========================================================
+-- 1. TABEL: users
+-- ========================================================
+CREATE TABLE `users` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nama_lengkap` VARCHAR(255) NOT NULL,
+  `username` VARCHAR(50) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
+  `role` ENUM('admin', 'petugas', 'owner') NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- 2. TABEL: tb_tarif
+-- ========================================================
+CREATE TABLE `tb_tarif` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `jenis_kendaraan` VARCHAR(50) NOT NULL,
+  `tarif_per_jam` DECIMAL(10,2) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- 3. TABEL: tb_area_parkir
+-- ========================================================
+CREATE TABLE `tb_area_parkir` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nama_area` VARCHAR(100) NOT NULL,
+  `kapasitas` INT NOT NULL,
+  `terisi` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- 4. TABEL: tb_kendaraan
+-- ========================================================
+CREATE TABLE `tb_kendaraan` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `plat_nomor` VARCHAR(20) NOT NULL UNIQUE,
+  `jenis_kendaraan` VARCHAR(50) NOT NULL,
+  `user_id` BIGINT UNSIGNED NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- 5. TABEL: tb_transaksi
+-- ========================================================
+CREATE TABLE `tb_transaksi` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `plat_nomor` VARCHAR(20) NOT NULL,
+  `waktu_masuk` DATETIME NOT NULL,
+  `waktu_keluar` DATETIME NULL DEFAULT NULL,
+  `biaya_total` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `status` ENUM('masuk', 'keluar') NOT NULL DEFAULT 'masuk',
+  `durasi_jam` INT NOT NULL DEFAULT 0,
+  `tarif_id` BIGINT UNSIGNED NULL,
+  `user_id` BIGINT UNSIGNED NULL,
+  `area_parkir_id` BIGINT UNSIGNED NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`tarif_id`) REFERENCES `tb_tarif`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`area_parkir_id`) REFERENCES `tb_area_parkir`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- 6. TABEL: activity_logs
+-- ========================================================
+CREATE TABLE `activity_logs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `aktivitas` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
