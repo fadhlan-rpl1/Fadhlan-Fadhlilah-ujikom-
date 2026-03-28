@@ -1,12 +1,12 @@
 -- ========================================================
--- NAMA DATABASE: lannpark
+-- NAMA DATABASE: db_parkir
 -- DBMS         : MySQL
 -- DESKRIPSI    : Struktur Database Sistem Manajemen Parkir
 -- ========================================================
 
 -- Membuat Database (Jika belum ada)
-CREATE DATABASE IF NOT EXISTS `lannpark`;
-USE `lannpark`;
+CREATE DATABASE IF NOT EXISTS `db_parkir`;
+USE `db_parkir`;
 
 -- ========================================================
 -- 1. TABEL: users
