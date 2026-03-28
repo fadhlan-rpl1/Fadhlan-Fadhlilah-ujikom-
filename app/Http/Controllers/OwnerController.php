@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaksi;
-use App\Models\ActivityLog; // <-- SUDAH DIPERBAIKI MENJADI ActivityLog
+use App\Models\ActivityLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf; 
@@ -14,7 +14,7 @@ class OwnerController extends Controller
     public function index()
     {
         $allTransactions = Transaksi::with(['tarif'])
-                        ->whereIn('status', ['keluar', 'Keluar', 'Selesai', 'selesai', 'sukses', 'Sukses'])
+                        ->where('status', 'keluar')
                         ->get();
 
         $pendapatanHariIni = 0;
@@ -32,11 +32,8 @@ class OwnerController extends Controller
         ];
 
         foreach ($allTransactions as $tr) {
-            $masuk = Carbon::parse($tr->created_at);
-            $keluar = Carbon::parse($tr->updated_at);
-            $durasi = max(1, ceil($masuk->diffInHours($keluar)));
-            $hargaPerJam = $tr->tarif->tarif_per_jam ?? 3000; 
-            $totalBiaya = $durasi * $hargaPerJam;
+            $keluar = Carbon::parse($tr->waktu_keluar);
+            $totalBiaya = $tr->biaya_total;
 
             if ($keluar->isToday()) {
                 $pendapatanHariIni += $totalBiaya;
@@ -50,9 +47,9 @@ class OwnerController extends Controller
             }
         }
 
-        $transaksis = Transaksi::with(['kendaraan', 'tarif', 'area'])
-                        ->whereIn('status', ['keluar', 'Keluar', 'Selesai', 'selesai', 'sukses', 'Sukses'])
-                        ->latest('updated_at')
+        $transaksis = Transaksi::with(['tarif', 'area'])
+                        ->where('status', 'keluar')
+                        ->latest('waktu_keluar')
                         ->paginate(5); 
 
         return view('owner.dashboard', compact(
@@ -63,44 +60,18 @@ class OwnerController extends Controller
 
     public function downloadPDF()
     {
-        $transaksis = Transaksi::with(['tarif', 'area', 'kendaraan'])
-                        ->whereIn('status', ['keluar', 'Keluar', 'Selesai', 'selesai', 'sukses', 'Sukses'])
+        $transaksis = Transaksi::with(['tarif', 'area'])
+                        ->where('status', 'keluar')
                         ->get();
 
-        $totalPendapatan = 0;
-        foreach ($transaksis as $tr) {
-            $masuk = Carbon::parse($tr->created_at);
-            $keluar = Carbon::parse($tr->updated_at);
-            $durasi = max(1, ceil($masuk->diffInHours($keluar)));
-            $hargaPerJam = $tr->tarif->tarif_per_jam ?? 3000;
-            $totalPendapatan += ($durasi * $hargaPerJam);
-        }
+        $totalPendapatan = $transaksis->sum('biaya_total');
 
-        // 📝 CATAT LOG
         ActivityLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Download Laporan',
-            'description' => 'Owner mengunduh laporan PDF pendapatan lannPark.'
+            'aktivitas' => 'Download Laporan',
         ]);
 
         $pdf = Pdf::loadView('owner.laporan_pdf', compact('transaksis', 'totalPendapatan'));
         return $pdf->download('Laporan-Pendapatan-lannPark.pdf');
-    }
-
-    public function destroy($id)
-    {
-        $transaksi = Transaksi::findOrFail($id);
-        $platNomor = $transaksi->kendaraan->plat_nomor ?? $transaksi->plat_nomor ?? '-';
-        
-        // 📝 CATAT LOG
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'activity' => 'Hapus Riwayat',
-            'description' => 'Owner menghapus riwayat transaksi secara permanen untuk plat nomor ' . $platNomor
-        ]);
-
-        $transaksi->delete();
-
-        return redirect()->back()->with('success', 'Riwayat transaksi berhasil dihapus dan pendapatan telah disesuaikan.');
     }
 }

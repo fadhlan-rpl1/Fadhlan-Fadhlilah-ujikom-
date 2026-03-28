@@ -13,7 +13,11 @@ return new class extends Migration
     Schema::create('tb_kendaraan', function (Blueprint $table) {
         $table->id();
         $table->string('plat_nomor')->unique();
+        $table->string('jenis_kendaraan');
+        $table->unsignedBigInteger('user_id')->nullable(); // Menyesuaikan dengan ERD yang ada foreign key user_id
         $table->timestamps();
+        
+        $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
     });
 }
 

@@ -112,11 +112,11 @@
                         
                         {{-- Tombol Aksi --}}
                         <td style="padding: 15px 20px; display: flex; gap: 8px; justify-content: center;">
-                            <button onclick="openEditUser('{{ $u->id_user }}', '{{ $u->nama_lengkap }}', '{{ $u->username }}', '{{ $u->role }}')" style="background: #eff6ff; color: #3b82f6; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Edit User">
+                            <button onclick="openEditUser('{{ $u->id }}', '{{ $u->nama_lengkap }}', '{{ $u->username }}', '{{ $u->role }}')" style="background: #eff6ff; color: #3b82f6; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Edit User">
                                 <i class="fas fa-edit"></i>
                             </button>
                             
-                            <form action="/admin/users/{{ $u->id_user }}" method="POST" style="margin: 0;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ $u->nama_lengkap }}?')">
+                            <form action="/admin/users/{{ $u->id }}" method="POST" style="margin: 0;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ $u->nama_lengkap }}?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" style="background: #fee2e2; color: #ef4444; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" title="Hapus User">
                                     <i class="fas fa-trash-alt"></i>

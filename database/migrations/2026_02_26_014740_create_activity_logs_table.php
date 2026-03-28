@@ -13,14 +13,11 @@ return new class extends Migration
 {
     Schema::create('activity_logs', function (Blueprint $table) {
         $table->id();
-        // Manual foreign key agar lebih akurat
         $table->unsignedBigInteger('user_id'); 
-        $table->string('activity');
-        $table->text('description');
+        $table->string('aktivitas'); // Sesuai ERD
         $table->timestamps();
 
-        // Menyambungkan ke id_user di tabel users
-        $table->foreign('user_id')->references('id_user')->on('users')->onDelete('cascade');
+        $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
     });
 }
 

@@ -33,8 +33,7 @@ class AreaParkirController extends Controller
         // 📝 CATAT LOG: Tambah Area
         ActivityLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Tambah Area',
-            'description' => 'Admin menambah area baru: ' . $request->nama_area . ' dengan kapasitas ' . $request->kapasitas
+            'aktivitas' => 'Tambah Area',
         ]);
 
         return back()->with('success', '🏢 Area parkir berhasil ditambahkan!');
@@ -60,8 +59,7 @@ class AreaParkirController extends Controller
         // 📝 CATAT LOG: Edit Area
         ActivityLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Edit Area',
-            'description' => "Admin mengubah area $namaLama (Kap: $kapasitasLama) menjadi $request->nama_area (Kap: $request->kapasitas)"
+            'aktivitas' => 'Edit Area',
         ]);
 
         return back()->with('success', '✏️ Data area parkir berhasil diperbarui!');
@@ -75,8 +73,7 @@ class AreaParkirController extends Controller
         // 📝 CATAT LOG: Hapus Area
         ActivityLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Hapus Area',
-            'description' => 'Admin menghapus area parkir: ' . $namaArea
+            'aktivitas' => 'Hapus Area',
         ]);
 
         $area->delete();

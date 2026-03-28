@@ -53,10 +53,10 @@
                     <tr style="transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                         <td style="padding: 15px 20px; color: #64748b; font-size: 14px;">
                             <i class="far fa-clock" style="margin-right: 5px;"></i> 
-                            {{ \Carbon\Carbon::parse($t->created_at ?? $t->waktu_masuk)->format('d M Y, H:i') }}
+                            {{ \Carbon\Carbon::parse($t->waktu_masuk)->format('d M Y, H:i') }}
                         </td>
                         <td style="padding: 15px 20px;">
-                            <b style="color: var(--primary); font-size: 15px; letter-spacing: 1px;">{{ $t->kendaraan->plat_nomor ?? $t->plat_nomor ?? '-' }}</b>
+                            <b style="color: var(--primary); font-size: 15px; letter-spacing: 1px;">{{ $t->plat_nomor ?? '-' }}</b>
                         </td>
                         <td style="padding: 15px 20px; color: #475569; text-transform: capitalize;">
                             {{ $t->area->nama_area ?? 'Tanpa Area' }}
@@ -70,7 +70,7 @@
                         </td>
                         <td style="padding: 15px 20px; display: flex; gap: 8px; justify-content: center;">
                             {{-- Tombol Edit --}}
-                            <button onclick="openEditTransaksi('{{ $t->id }}', '{{ $t->kendaraan->plat_nomor ?? $t->plat_nomor ?? '' }}', '{{ $t->area_parkir_id }}')" style="background: #eff6ff; color: #3b82f6; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Edit Area/Plat">
+                            <button onclick="openEditTransaksi('{{ $t->id }}', '{{ $t->plat_nomor ?? '' }}', '{{ $t->area_parkir_id }}')" style="background: #eff6ff; color: #3b82f6; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Edit Area/Plat">
                                 <i class="fas fa-edit"></i>
                             </button>
 

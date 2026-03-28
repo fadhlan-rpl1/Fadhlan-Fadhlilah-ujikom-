@@ -44,17 +44,16 @@
             <tbody>
                 @forelse($transaksis as $tr)
                 @php
-                    // MENCARI DATA (Di Kendaraan ATAU di Transaksi)
-                    $platNomor = $tr->kendaraan->plat_nomor ?? $tr->plat_nomor ?? 'Kosong';
-                    $hargaPerJam = $tr->kendaraan->tarif->tarif_per_jam ?? $tr->tarif->tarif_per_jam ?? 0;
+                    $platNomor = $tr->plat_nomor ?? 'Kosong';
+                    $hargaPerJam = $tr->tarif->tarif_per_jam ?? 0;
                 @endphp
                 <tr>
                     <td style="font-weight: 700; color: var(--primary);">{{ $platNomor }}</td>
-                    <td>{{ $tr->created_at->format('H:i') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($tr->waktu_masuk)->format('H:i') }}</td>
                     
                     <td style="font-weight: 800; color: #059669;" 
                         class="biaya-update" 
-                        data-masuk="{{ $tr->created_at->toIso8601String() }}" 
+                        data-masuk="{{ \Carbon\Carbon::parse($tr->waktu_masuk)->toIso8601String() }}" 
                         data-tarif="{{ $hargaPerJam }}">
                         Rp 0
                     </td>

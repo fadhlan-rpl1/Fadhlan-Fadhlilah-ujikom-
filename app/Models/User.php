@@ -10,15 +10,11 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // Jika di tabel users kamu nama kolom ID-nya adalah 'id_user'
-    protected $primaryKey = 'id_user';
-
     protected $fillable = [
         'nama_lengkap',
         'username',
         'password',
         'role',
-        'status_aktif',
     ];
 
     protected $hidden = [
@@ -33,6 +29,4 @@ class User extends Authenticatable
         ];
     }
 
-    // HAPUS fungsi getAuthIdentifierName yang mengarah ke username!
-    // Laravel secara otomatis tahu cara login pakai username melalui Controller.
 }

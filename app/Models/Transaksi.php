@@ -9,17 +9,8 @@ class Transaksi extends Model
     // Pastikan nama tabelnya sesuai
     protected $table = 'tb_transaksi'; 
     
-    // Guarded kosong agar semua field bisa diisi (termasuk tarif_id dan kendaraan_id)
+    // Guarded kosong agar semua field bisa diisi
     protected $guarded = []; 
-
-    /**
-     * INI SOLUSI ERRORNYA: Relasi ke tabel Kendaraan
-     */
-    public function kendaraan()
-    {
-        // Menyambungkan Transaksi dengan Kendaraan berdasarkan kendaraan_id
-        return $this->belongsTo(Kendaraan::class, 'kendaraan_id');
-    }
 
     /**
      * Relasi ke tabel Tarif
@@ -35,5 +26,13 @@ class Transaksi extends Model
     public function area()
     {
         return $this->belongsTo(AreaParkir::class, 'area_parkir_id');
+    }
+    
+    /**
+     * Relasi ke tabel Users (Petugas)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

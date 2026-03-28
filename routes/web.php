@@ -10,23 +10,12 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\OwnerController; 
 
-/*
-|--------------------------------------------------------------------------
-| Guest Routes
-|--------------------------------------------------------------------------
-*/
 Route::get('/', [LoginController::class, 'index'])->name('login')->middleware('guest');
 Route::post('/login', [LoginController::class, 'authenticate']);
 Route::post('/logout', [LoginController::class, 'logout']);
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth'])->group(function () {
     
-    // Rute utama /dashboard yang mengalihkan ke rute spesifik role
     Route::get('/dashboard', function() {
         $role = auth()->user()->role;
         if ($role == 'admin') return redirect('/admin/dashboard');
@@ -35,7 +24,6 @@ Route::middleware(['auth'])->group(function () {
         return redirect('/')->with('loginError', 'Role tidak terdaftar!');
     });
 
-    /* --- GRUP ADMIN --- */
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', function() { return view('admin.dashboard'); });
         
@@ -62,34 +50,19 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/logs', [LogController::class, 'index']);
     });
 
-   /* --- GRUP PETUGAS --- */
     Route::prefix('petugas')->group(function () {
         Route::get('/dashboard', [PetugasController::class, 'index']);
         
-        // Simpan Data
         Route::post('/transaksi/store', [TransaksiController::class, 'store']);
-        
-        // EDIT Data Kendaraan
-        Route::put('/transaksi/update-data/{id}', [PetugasController::class, 'updateData']);
-        
-        // BAYAR Kendaraan (Checkout)
-        Route::put('/transaksi/bayar/{id}', [PetugasController::class, 'bayar']);
-        
-        // HAPUS Data
-        Route::delete('/transaksi/delete/{id}', [PetugasController::class, 'destroy']);
-        
-        // HALAMAN CETAK STRUK
-        Route::get('/transaksi/struk/{id}', [PetugasController::class, 'struk']);
+        Route::put('/transaksi/update-data/{id}', [TransaksiController::class, 'update']);
+        Route::put('/transaksi/bayar/{id}', [TransaksiController::class, 'bayar']);
+        Route::delete('/transaksi/delete/{id}', [TransaksiController::class, 'destroy']);
+        Route::get('/transaksi/struk/{id}', [TransaksiController::class, 'struk']);
     });
 
-  /* --- GRUP OWNER --- */
     Route::prefix('owner')->group(function () {
         Route::get('/dashboard', [OwnerController::class, 'index']);
-        
-        // RUTE BARU: Untuk Download PDF
         Route::get('/laporan/download', [OwnerController::class, 'downloadPDF']);
-        
-        // 👉 RUTE BARU: Untuk Fitur Hapus Transaksi (Memperbaiki 404 Not Found) 👈
-        Route::delete('/transaksi/delete/{id}', [OwnerController::class, 'destroy']);
+        Route::delete('/transaksi/delete/{id}', [TransaksiController::class, 'destroy']);
     });
 });

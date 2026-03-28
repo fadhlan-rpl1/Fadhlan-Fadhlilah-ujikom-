@@ -28,14 +28,14 @@
         <tbody>
             @foreach($transaksis as $index => $tr)
             @php
-                $masuk = \Carbon\Carbon::parse($tr->created_at);
-                $keluar = \Carbon\Carbon::parse($tr->updated_at);
-                $durasi = max(1, ceil($masuk->diffInHours($keluar)));
-                $biaya = $durasi * ($tr->tarif->tarif_per_jam ?? 0);
+                $masuk = \Carbon\Carbon::parse($tr->waktu_masuk);
+                $keluar = \Carbon\Carbon::parse($tr->waktu_keluar);
+                $durasi = $tr->durasi_jam;
+                $biaya = $tr->biaya_total;
             @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $tr->kendaraan->plat_nomor ?? $tr->plat_nomor }}</td>
+                <td>{{ $tr->plat_nomor }}</td>
                 <td>{{ $tr->tarif->jenis_kendaraan ?? '-' }}</td>
                 <td>{{ $masuk->format('H:i') }}</td>
                 <td>{{ $keluar->format('H:i') }}</td>

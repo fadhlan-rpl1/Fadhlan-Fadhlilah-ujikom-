@@ -7,6 +7,7 @@ use App\Models\Kendaraan;
 use App\Models\AreaParkir;
 use App\Models\ActivityLog;
 use App\Models\Tarif;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,22 +15,18 @@ class TransaksiController extends Controller
 {
     public function index() 
     {
-        // 1. Menggunakan paginate(5) agar tombol halaman di view berfungsi
-        $transaksis = Transaksi::with(['kendaraan', 'area'])->latest()->paginate(5);
+        $transaksis = Transaksi::with(['area', 'tarif'])->latest()->paginate(5);
         
         $areas = AreaParkir::all(); 
         $tarifs = Tarif::all(); 
         
-        // 👇 JALUR VIEW SUDAH DIPERBAIKI MENJADI admin.transaksi.index 👇
         return view('admin.transaksi.index', compact('transaksis', 'areas', 'tarifs'));
     }
 
-    // --- FUNGSI SIMPAN (KENDARAAN MASUK) ---
     public function store(Request $request)
     {
         $request->validate([
             'plat_nomor' => 'required',
-            // 'tarif_id' => 'required', // Dimatikan sementara jika form modal belum ada dropdown tarif
             'area_parkir_id' => 'required'
         ]);
 
@@ -39,33 +36,33 @@ class TransaksiController extends Controller
             return back()->with('error', 'Maaf, area parkir ini sudah penuh!');
         }
 
-        $kendaraan = Kendaraan::firstOrCreate([
+        // Catat kendaraan ke tabel kendaraan jika belum ada
+        Kendaraan::firstOrCreate([
             'plat_nomor' => strtoupper($request->plat_nomor)
+        ], [
+            'jenis_kendaraan' => Tarif::find($request->tarif_id ?? 1)->jenis_kendaraan ?? 'Lainnya',
+            'user_id' => Auth::id()
         ]);
 
         $transaksi = Transaksi::create([
-            'kode_transaksi' => 'TRX-' . strtoupper(uniqid()),
-            'kendaraan_id'   => $kendaraan->id,
+            'plat_nomor'     => strtoupper($request->plat_nomor),
             'area_parkir_id' => $request->area_parkir_id,
-            'tarif_id'       => $request->tarif_id ?? 1, // Fallback ke tarif ID 1
-            'user_id'        => Auth::user()->id_user ?? Auth::id(), 
+            'tarif_id'       => $request->tarif_id ?? 1, 
+            'user_id'        => Auth::id(), 
             'waktu_masuk'    => now(),
             'status'         => 'masuk'
         ]);
 
         $area->decrement('kapasitas');
 
-        // 📝 CATAT LOG: Simpan Data
         ActivityLog::create([
-            'user_id' => Auth::user()->id_user ?? Auth::id(),
-            'activity' => 'Kendaraan Masuk',
-            'description' => 'Admin mendaftarkan kendaraan masuk dengan plat ' . strtoupper($request->plat_nomor)
+            'user_id' => Auth::id(),
+            'aktivitas' => 'Kendaraan Masuk',
         ]);
 
         return back()->with('success', 'Data kendaraan berhasil masuk!');
     }
 
-    // --- FUNGSI UPDATE UNTUK EDIT ---
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -77,40 +74,60 @@ class TransaksiController extends Controller
         $areaLama = AreaParkir::find($transaksi->area_parkir_id);
         $areaBaru = AreaParkir::findOrFail($request->area_parkir_id);
 
-        // Update plat nomor di tabel kendaraan
-        if ($transaksi->kendaraan) {
-            $transaksi->kendaraan->update([
-                'plat_nomor' => strtoupper($request->plat_nomor)
-            ]);
-        }
-
-        // Logika jika Area Parkir diubah
         if ($transaksi->area_parkir_id != $request->area_parkir_id) {
             if ($areaLama) $areaLama->increment('kapasitas');
             if ($areaBaru) $areaBaru->decrement('kapasitas');
         }
 
         $transaksi->update([
-            'area_parkir_id' => $request->area_parkir_id
+            'plat_nomor' => strtoupper($request->plat_nomor),
+            'area_parkir_id' => $request->area_parkir_id,
+            'tarif_id' => $request->tarif_id ?? $transaksi->tarif_id,
         ]);
 
-        // 📝 CATAT LOG: Edit Data
         ActivityLog::create([
-            'user_id' => Auth::user()->id_user ?? Auth::id(),
-            'activity' => 'Edit Transaksi',
-            'description' => 'Admin mengubah data parkir kendaraan plat ' . strtoupper($request->plat_nomor)
+            'user_id' => Auth::id(),
+            'aktivitas' => 'Edit Transaksi',
         ]);
 
         return back()->with('success', 'Data transaksi berhasil diperbarui!');
     }
 
-    // --- FUNGSI HAPUS ---
+    public function bayar($id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        
+        $waktu_masuk = Carbon::parse($transaksi->waktu_masuk);
+        $waktu_keluar = now();
+        $selisihJam = $waktu_masuk->diffInHours($waktu_keluar);
+        $durasi = max(1, ceil($selisihJam)); 
+        
+        $hargaPerJam = $transaksi->tarif->tarif_per_jam ?? 3000;
+        $totalBiaya = $durasi * $hargaPerJam;
+
+        $transaksi->update([
+            'status' => 'keluar',
+            'waktu_keluar' => $waktu_keluar,
+            'durasi_jam' => $durasi,
+            'biaya_total' => $totalBiaya
+        ]);
+
+        if ($transaksi->area) {
+            $transaksi->area->increment('kapasitas');
+        }
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'aktivitas' => 'Kendaraan Keluar',
+        ]);
+
+        return redirect('/petugas/transaksi/struk/' . $transaksi->id);
+    }
+
     public function destroy($id) 
     {
-        $transaksi = Transaksi::with('kendaraan')->findOrFail($id);
-        $plat = $transaksi->kendaraan->plat_nomor ?? $transaksi->plat_nomor ?? 'Tidak Diketahui';
+        $transaksi = Transaksi::findOrFail($id);
 
-        // KEMBALIKAN KAPASITAS AREA SEBELUM DIHAPUS (Hanya jika statusnya masih masuk)
         if (strtolower($transaksi->status) == 'masuk') {
             $area = AreaParkir::find($transaksi->area_parkir_id);
             if ($area) {
@@ -118,15 +135,27 @@ class TransaksiController extends Controller
             }
         }
 
-        // 📝 CATAT LOG: Hapus Data
         ActivityLog::create([
-            'user_id' => Auth::user()->id_user ?? Auth::id(),
-            'activity' => 'Hapus Transaksi',
-            'description' => 'Admin menghapus data kendaraan plat: ' . $plat
+            'user_id' => Auth::id(),
+            'aktivitas' => 'Hapus Transaksi',
         ]);
 
         $transaksi->delete();
 
-        return back()->with('success', 'Data berhasil dihapus dan kapasitas dikembalikan!');
+        return back()->with('success', 'Data berhasil dihapus!');
+    }
+
+    public function struk($id)
+    {
+        $transaksi = Transaksi::with(['tarif', 'area'])->findOrFail($id);
+        
+        $masuk = Carbon::parse($transaksi->waktu_masuk);
+        $keluar = Carbon::parse($transaksi->waktu_keluar);
+        $durasi = $transaksi->durasi_jam; 
+        $hargaPerJam = $transaksi->tarif->tarif_per_jam ?? 3000;
+        $totalBiaya = $transaksi->biaya_total;
+        $platNomor = $transaksi->plat_nomor;
+
+        return view('petugas.struk', compact('transaksi', 'masuk', 'keluar', 'durasi', 'hargaPerJam', 'totalBiaya', 'platNomor'));
     }
 }

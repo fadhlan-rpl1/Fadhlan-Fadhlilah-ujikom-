@@ -28,9 +28,8 @@ class TarifController extends Controller
 
         // Catat ke Log Aktivitas
         ActivityLog::create([
-            'user_id' => auth()->user()->id_user,
-            'activity' => 'Tambah Tarif',
-            'description' => "Menambah tarif baru: {$request->jenis_kendaraan} (Rp {$request->tarif_per_jam}/jam)"
+            'user_id' => auth()->user()->id,
+            'aktivitas' => 'Tambah Tarif',
         ]);
 
         return back()->with('success', 'Tarif berhasil ditambahkan!');
@@ -53,9 +52,8 @@ class TarifController extends Controller
 
         // Catat ke Log Aktivitas
         ActivityLog::create([
-            'user_id' => auth()->user()->id_user,
-            'activity' => 'Edit Tarif',
-            'description' => "Mengubah tarif {$request->jenis_kendaraan} menjadi Rp {$request->tarif_per_jam}/jam"
+            'user_id' => auth()->user()->id,
+            'aktivitas' => 'Edit Tarif',
         ]);
 
         return back()->with('success', 'Tarif berhasil diperbarui!');
@@ -68,9 +66,8 @@ class TarifController extends Controller
 
         // Catat ke Log Aktivitas sebelum dihapus
         ActivityLog::create([
-            'user_id' => auth()->user()->id_user,
-            'activity' => 'Hapus Tarif',
-            'description' => "Menghapus data tarif untuk jenis kendaraan: {$jenis}"
+            'user_id' => auth()->user()->id,
+            'aktivitas' => 'Hapus Tarif',
         ]);
 
         $tarif->delete();

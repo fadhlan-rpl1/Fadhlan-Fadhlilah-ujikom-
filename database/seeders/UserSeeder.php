@@ -15,7 +15,6 @@ class UserSeeder extends Seeder
             'username'     => 'admin',
             'password'     => Hash::make('admin123'),
             'role'         => 'admin',
-            'status_aktif' => 1,
         ]);
 
         User::create([
@@ -23,7 +22,12 @@ class UserSeeder extends Seeder
             'username'     => 'petugas',
             'password'     => Hash::make('petugas123'),
             'role'         => 'petugas',
-            'status_aktif' => 1,
+        ]);
+        User::create([
+            'nama_lengkap' => 'Owner Laporan',
+            'username'     => 'owner',
+            'password'     => Hash::make('owner123'),
+            'role'         => 'owner',
         ]);
     }
 }

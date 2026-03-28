@@ -112,11 +112,11 @@
                 <tbody>
                     @forelse($transaksis as $tr)
                         @php
-                            $platNomor = $tr->kendaraan->plat_nomor ?? $tr->plat_nomor ?? '-';
-                            $masuk = \Carbon\Carbon::parse($tr->created_at);
-                            $keluar = \Carbon\Carbon::parse($tr->updated_at);
-                            $durasi = max(1, ceil($masuk->diffInHours($keluar)));
-                            $biaya = $durasi * ($tr->tarif->tarif_per_jam ?? 3000);
+                            $platNomor = $tr->plat_nomor ?? '-';
+                            $masuk = \Carbon\Carbon::parse($tr->waktu_masuk);
+                            $keluar = \Carbon\Carbon::parse($tr->waktu_keluar);
+                            $durasi = $tr->durasi_jam;
+                            $biaya = $tr->biaya_total;
                         @endphp
                         <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                             <td style="padding: 15px 20px; font-weight: 700; color: var(--primary);">{{ $platNomor }}</td>
